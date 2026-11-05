@@ -27,5 +27,5 @@ O sistema está em produção e pode ser testado diretamente no navegador atrav�
 
 🔗 **https://santander-private-cockpit-fjr4msj3t.vercel.app/**
 
-**Dica de Navegação**
+**Dica de Navegação:**
 Para visualizar o fluxo completo de valor do sistema, recomendo selecionar o cliente `Eduardo Vasconcelos & Família (Alerta de Risco)`, acionar o Assistente Copilot para analisar o impacto na carteira e, em seguida, utilizar a função **"Gerar Apresentação / Relatório para o Cliente"** no menu superior.
