@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Santander Private Cockpit — Sistema de Suporte à Decisão para Advisors</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Chart.js 4.4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Estilos Executivos Santander Private -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ========================================================================
+       A. TOPO EXECUTIVO & PAINEL DE COTAÇÕES DE MERCADO (TICKER)
+       ======================================================================== -->
+  <header class="top-header">
+    <div class="header-inner">
+      <div class="brand-group">
+        <div class="brand-emblem" title="Santander Private Banking">SP</div>
+        <div class="brand-titles">
+          <h1>
+            Santander Private Cockpit
+            <span class="private-pill">Wealth Management Advisory</span>
+          </h1>
+          <p>Sistema de Suporte à Decisão, Enquadramento de Risco e Alocação Estratégica</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btn-open-upload" class="btn btn-dark-outline" title="Importar ou Exportar Base de Clientes CSV/JSON">
+          <span>📥 Importar / Exportar Base (CSV/JSON)</span>
+        </button>
+        <button id="btn-reset-database" class="btn btn-dark-outline" title="Restaurar Base Inicial de 10 Clientes">
+          <span>↺ Restaurar Base Padrão</span>
+        </button>
+        <button id="btn-open-presentation-top" class="btn btn-santander-primary">
+          <span>📊 Gerar Apresentação / Relatório para o Cliente</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de Cotações em Tempo Real -->
+    <div class="market-ticker-bar">
+      <div class="ticker-bar-inner">
+        <div class="ticker-label-box">
+          <span class="live-pulse"></span>
+          <span>Radar de Mercado</span>
+        </div>
+        <div id="market-ticker-list" class="ticker-list">
+          <!-- Renderizado via js/app.js -->
+        </div>
+        <button class="btn-refresh-quotes" onclick="window.SPC.App.simulateMarketTick()">
+          ⟳ Atualizar Cotações
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       CONTAINER PRINCIPAL DO DASHBOARD GERENCIAL
+       ======================================================================== -->
+  <main class="cockpit-container">
+
+    <!-- B.1 KPIs EXECUTIVOS DO MONITOR DE CARTEIRAS -->
+    <section class="kpi-grid" aria-label="Indicadores Consolidados">
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Total sob Gestão (AuM)</span>
+          <span>💰</span>
+        </div>
+        <div id="kpi-total-aum" class="kpi-value">R$ 0,00 mi</div>
+        <div id="kpi-aum-sub" class="kpi-sub">Carregando base Private...</div>
+      </div>
+
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <span>Total de Clientes Private</span>
+          <span>👥</span>
+        </div>
+        <div id="kpi-total-clients" class="kpi-value">0</div>
+        <div id="kpi-clients-sub" class="kpi-sub">Distribuídos por perfil</div>
+      </div>
+
+      <div class="kpi-card kpi-alert">
+        <div class="kpi-header">
+          <span>Alertas de Desenquadramento</span>
+          <span>⚠️</span>
+        </div>
+        <div id="kpi-alerts-count" class="kpi-value">0</div>
+        <div id="kpi-alerts-sub" class="kpi-sub">Volume com exposição excessiva a risco</div>
+      </div>
+
+      <div class="kpi-card kpi-perf">
+        <div class="kpi-header">
+          <span>Rentabilidade Ponderada (12M)</span>
+          <span>📈</span>
+        </div>
+        <div id="kpi-avg-return" class="kpi-value">0,00%</div>
+        <div id="kpi-return-sub" class="kpi-sub">Comparativo vs. CDI (11,25% a.a.)</div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         GRID SUPERIOR: B. MONITOR DE CARTEIRAS + A.2 NOTÍCIAS E EVENTOS
+         ====================================================================== -->
+    <section class="top-workspace-grid">
+
+      <!-- B.2 Tabela Gerencial de Carteiras e Alertas de Investimentos Arriscados -->
+      <div class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2>
+              <span class="red-accent-dot"></span>
+              Monitor de Carteiras &amp; Enquadramento de Risco
+            </h2>
+            <p>Clique em um cliente para abrir o diagnóstico automatizado, gráficos comparativos e simulador de rebalanceamento</p>
+          </div>
+        </div>
+
+        <!-- Barra de Filtros Rápidos -->
+        <div class="table-Quick-filters">
+          <div class="filter-pills">
+            <button class="filter-pill active" data-risk-filter="all">
+              Todos <span id="badge-count-all" class="pill-count">10</span>
+            </button>
+            <button class="filter-pill risk-highlight" data-risk-filter="above-profile">
+              ⚠️ Risco Acima do Perfil <span id="badge-count-above" class="pill-count">7</span>
+            </button>
+            <button class="filter-pill" data-risk-filter="danger">
+              🔴 Desenquadrado - Alto Risco <span id="badge-count-danger" class="pill-count">5</span>
+            </button>
+            <button class="filter-pill" data-risk-filter="ok">
+              🟢 Enquadrados <span id="badge-count-ok" class="pill-count">3</span>
+            </button>
+          </div>
+
+          <div class="filter-controls-right">
+            <select id="filter-profile-select" class="select-control" aria-label="Filtrar por Perfil de Risco">
+              <option value="all">Perfil: Todos</option>
+              <option value="Conservador">Conservador</option>
+              <option value="Moderado">Moderado</option>
+              <option value="Arrojado">Arrojado</option>
+            </select>
+            <input
+              type="search"
+              id="client-search-input"
+              class="input-control"
+              placeholder="Buscar cliente ou ID (ex: PB-1042)..."
+            />
+          </div>
+        </div>
+
+        <!-- Tabela de Clientes -->
+        <div class="table-responsive">
+          <table class="clients-table">
+            <thead>
+              <tr>
+                <th>Cliente / Identificação</th>
+                <th class="text-right">Patrimônio (AuM)</th>
+                <th>Perfil</th>
+                <th>Alocação Atual (Resumo)</th>
+                <th>Nível de Risco vs. Limite</th>
+                <th class="text-right">Rentab. 12M vs CDI</th>
+                <th>Status da Carteira</th>
+                <th class="text-right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="clients-table-body">
+              <!-- Renderizado via js/app.js -->
+            </tbody>
+          </table>
+          <div id="clients-empty-state" class="empty-state hidden">
+            Nenhum cliente encontrado para os filtros selecionados.
+          </div>
+        </div>
+      </div>
+
+      <!-- A.2 Painel Lateral de Notícias e Eventos de Mercado -->
+      <aside class="panel-card">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2>
+              <span class="red-accent-dot"></span>
+              Notícias &amp; Eventos de Mercado
+            </h2>
+            <p>Manchetes financeiras e impacto direto nas carteiras</p>
+          </div>
+        </div>
+        <div id="market-news-list" class="news-list">
+          <!-- Renderizado via js/app.js -->
+        </div>
+      </aside>
+    </section>
+
+    <!-- ======================================================================
+         B.3 & C. VISÃO DETALHADA DO CLIENTE + PLANO DE AÇÃO AUTOMATIZADO
+         ====================================================================== -->
+    <section id="client-detail-workspace" class="panel-card">
+      <!-- Banner do Cliente Selecionado -->
+      <div class="client-detail-banner">
+        <div>
+          <div class="detail-title-row">
+            <h2 id="detail-client-name">—</h2>
+            <span id="detail-client-id" class="detail-id-pill">PB-0000</span>
+            <span id="detail-client-status" class="status-badge large danger">
+              <span class="status-dot"></span> —
+            </span>
+          </div>
+          <div id="detail-client-meta" class="detail-meta-line"></div>
+          <div id="detail-client-notes" class="detail-notes-line"></div>
+        </div>
+
+        <div class="detail-banner-actions">
+          <button id="btn-reset-rebalance" class="btn btn-dark-outline hidden">
+            ↺ Desfazer Simulação
+          </button>
+          <button id="btn-apply-rebalance" class="btn btn-executive-dark">
+            ⚡ Aplicar Alocação Recomendada Ideal
+          </button>
+          <button id="btn-open-presentation-detail" class="btn btn-santander-primary">
+            📄 Gerar Apresentação / Relatório para o Cliente
+          </button>
+        </div>
+      </div>
+
+      <!-- Gráficos Comparativos: Alocação Atual vs Recomendada Ideal & Histórico 12M -->
+      <div class="detail-charts-grid">
+        <!-- Coluna 1: Alocação Atual vs. Alocação Recomendada Ideal -->
+        <div class="chart-box">
+          <div class="chart-box-header">
+            <div>
+              <h3>Alocação Atual vs. Alocação Recomendada Ideal</h3>
+              <p>Comparativo percentual e financeiro com o Modelo Estratégico Santander Private</p>
+            </div>
+            <div class="chart-toggle-group">
+              <button class="chart-toggle-btn active" data-chart-type="bar">Barras</button>
+              <button class="chart-toggle-btn" data-chart-type="radar">Radar</button>
+            </div>
+          </div>
+
+          <div class="canvas-wrapper">
+            <canvas id="chart-allocation"></canvas>
+          </div>
+
+          <table class="allocation-comparison-table">
+            <thead>
+              <tr>
+                <th>Classe de Ativo</th>
+                <th class="text-right">Atual (%)</th>
+                <th class="text-right">Ideal (%)</th>
+                <th class="text-right">Desvio (p.p.)</th>
+                <th class="text-right">Ajuste Financeiro (R$)</th>
+              </tr>
+            </thead>
+            <tbody id="allocation-comparison-tbody">
+              <!-- Renderizado via js/app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Coluna 2: Rentabilidade nos Últimos 12 Meses (% Carteira vs % CDI) -->
+        <div class="chart-box">
+          <div class="chart-box-header">
+            <div>
+              <h3>Histórico de Rentabilidade Acumulada (Últimos 12 Meses)</h3>
+              <p>Desempenho acumulado da carteira (%) comparado ao Benchmark CDI (11,25% a.a.)</p>
+            </div>
+          </div>
+
+          <div class="canvas-wrapper">
+            <canvas id="chart-performance"></canvas>
+          </div>
+
+          <div class="client-mini-kpis">
+            <div class="mini-kpi-item">
+              <div class="mini-kpi-label">Patrimônio (AuM)</div>
+              <div id="detail-kpi-aum" class="mini-kpi-val">—</div>
+            </div>
+            <div class="mini-kpi-item">
+              <div class="mini-kpi-label">Score vs. Limite</div>
+              <div id="detail-kpi-risk" class="mini-kpi-val">—</div>
+            </div>
+            <div class="mini-kpi-item">
+              <div class="mini-kpi-label">RV + Alternativos</div>
+              <div id="detail-kpi-volatile" class="mini-kpi-val">—</div>
+            </div>
+            <div class="mini-kpi-item">
+              <div class="mini-kpi-label">Retorno 12M</div>
+              <div id="detail-kpi-return" class="mini-kpi-val">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- C. PLANO DE AÇÃO AUTOMATIZADO ("O QUE FAZER COM AS INFORMAÇÕES") -->
+      <div class="action-plan-section">
+        <div class="action-plan-header">
+          <h3>
+            <span class="red-accent-dot"></span>
+            Plano de Ação Automatizado — Diagnóstico &amp; Recomendação de Rebalanceamento
+          </h3>
+          <span class="muted-text" style="font-size: 12px;">
+            Motor de regras Santander Private Advisory • Atualizado em tempo real
+          </span>
+        </div>
+
+        <div class="action-pillars-grid">
+          <!-- 1. Diagnóstico do Problema -->
+          <div id="action-card-diagnosis" class="action-pillar-card status-border-danger">
+            <span class="pillar-step-badge">1. Diagnóstico da Carteira</span>
+            <h4 id="action-diagnosis-title">—</h4>
+            <p id="action-diagnosis-text">—</p>
+          </div>
+
+          <!-- 2. Recomendação Prática de Rebalanceamento -->
+          <div class="action-pillar-card">
+            <span class="pillar-step-badge">2. Recomendação Prática de Rebalanceamento</span>
+            <h4>Boleta Estratégica de Realocação (De → Para)</h4>
+            <p id="action-recommendation-text">—</p>
+            <div id="action-orders-list" class="orders-list">
+              <!-- Boletas geradas via js/app.js -->
+            </div>
+          </div>
+
+          <!-- 3. Justificativa Baseada no Cenário Econômico Atual -->
+          <div class="action-pillar-card">
+            <span class="pillar-step-badge">3. Justificativa Macroeconômica</span>
+            <h4>Fundamentação no Cenário Atual (Juros, Câmbio &amp; Inflação)</h4>
+            <p id="action-justification-text">—</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         D. ASSISTENTE DE IA INTEGRADO ("SISTEMA PARA CONVERSAR" / ADVISOR COPILOT)
+         ====================================================================== -->
+    <section id="copilot-section" class="copilot-workspace">
+      <div class="copilot-sidebar">
+        <div>
+          <div class="copilot-brand-badge">
+            <span>✦ Inteligência Artificial Generativa</span>
+          </div>
+          <h3>Santander Advisor Copilot</h3>
+          <p>
+            Converse diretamente com a base de dados de clientes carregada no Cockpit. O assistente cruza alocações, desenquadramentos de risco e cotações do dia para apoiar sua tomada de decisão.
+          </p>
+        </div>
+
+        <div class="quick-prompts-box">
+          <div class="quick-prompts-label">Prompts Rápidos para o Advisor:</div>
+          <button
+            type="button"
+            class="btn-quick-prompt"
+            data-quick-prompt="Quais clientes estão com investimentos mais arriscados que o perfil?"
+          >
+            ⚠️ "Quais clientes estão com investimentos mais arriscados que o perfil?"
+          </button>
+          <button
+            type="button"
+            class="btn-quick-prompt"
+            data-quick-prompt="Gere um resumo de rebalanceamento para o cliente selecionado"
+          >
+            ⚖️ "Gere um resumo de rebalanceamento para o cliente selecionado"
+          </button>
+          <button
+            type="button"
+            class="btn-quick-prompt"
+            data-quick-prompt="Qual o impacto da alta do dólar nas carteiras atuais?"
+          >
+            💵 "Qual o impacto da alta do dólar nas carteiras atuais?"
+          </button>
+          <button
+            type="button"
+            class="btn-quick-prompt"
+            data-quick-prompt="Quais carteiras renderam abaixo do CDI nos últimos 12 meses?"
+          >
+            📉 "Quais carteiras renderam abaixo do CDI nos últimos 12 meses?"
+          </button>
+          <button
+            type="button"
+            class="btn-quick-prompt"
+            data-quick-prompt="Monte um script de abordagem comercial para o cliente selecionado"
+          >
+            🗣️ "Monte um script de abordagem comercial para o cliente selecionado"
+          </button>
+        </div>
+      </div>
+
+      <div class="copilot-chat-area">
+        <div id="copilot-messages" class="copilot-messages">
+          <!-- Mensagens renderizadas via js/app.js e js/copilot.js -->
+        </div>
+
+        <form id="copilot-form" class="copilot-form">
+          <input
+            type="text"
+            id="copilot-input"
+            class="copilot-input"
+            placeholder="Pergunte sobre um cliente (ex: Eduardo, Roberto, PB-1042), risco, CDI, dólar ou rebalanceamento..."
+            autocomplete="off"
+          />
+          <button type="submit" class="btn btn-santander-primary">
+            Enviar Pergunta →
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       MODAL DE UPLOAD / IMPORTAÇÃO E EXPORTAÇÃO DE BASE DE DADOS (CSV / JSON)
+       ======================================================================== -->
+  <div id="upload-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📥 Importar / Exportar Base de Clientes (CSV ou JSON)</h3>
+        <button id="btn-close-upload" class="btn-close-modal" title="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 13px; color: var(--text-secondary);">
+          Carregue uma planilha <strong>.CSV</strong> ou arquivo <strong>.JSON</strong> com novos clientes de Private Banking. O motor analítico calculará automaticamente o Score de Risco, Status de Enquadramento e o Plano de Ação.
+        </p>
+
+        <div class="import-mode-group">
+          <label>
+            <input type="radio" name="import-mode" value="merge" checked />
+            Mesclar / Adicionar aos clientes atuais
+          </label>
+          <label>
+            <input type="radio" name="import-mode" value="replace" />
+            Substituir toda a base atual
+          </label>
+        </div>
+
+        <label id="upload-dropzone" class="upload-dropzone" for="file-upload-input">
+          <h4>Clique para selecionar arquivo ou arraste aqui (.CSV / .JSON)</h4>
+          <p>Suporta separadores por ponto-e-vírgula (;) ou vírgula (,)</p>
+          <input
+            type="file"
+            id="file-upload-input"
+            accept=".csv,.json,text/csv,application/json"
+            style="display: none;"
+          />
+        </label>
+
+        <div>
+          <div style="font-size: 11.5px; font-weight: 700; margin-bottom: 4px; color: var(--text-secondary);">
+            Colunas suportadas no CSV:
+          </div>
+          <div class="code-schema-hint">
+            id;nome;idade;patrimonio;perfil;renda_fixa;multimercado;renda_variavel;internacional;alternativos;rentabilidade_12m;cdi_12m
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding-top: 6px;">
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button type="button" class="btn btn-outline-neutral" onclick="window.SPC.App.downloadSampleCSV()">
+              ⬇️ Baixar Modelo CSV
+            </button>
+            <button type="button" class="btn btn-outline-neutral" onclick="window.SPC.App.downloadCurrentDatabaseCSV()">
+              📤 Exportar Base Atual (CSV)
+            </button>
+          </div>
+          <button type="button" id="btn-load-sample-batch" class="btn btn-executive-dark">
+            ⚡ Importar Lote Demo (+3 Clientes)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       E. GERADOR DE RELATÓRIO EXECUTIVO ("APRESENTAR PARA O CLIENTE")
+       Modo Apresentação Consultivo & Imprimível em PDF
+       ======================================================================== -->
+  <div id="presentation-modal" class="modal-overlay presentation-overlay hidden" role="dialog" aria-modal="true">
+    <div class="presentation-sheet">
+      <!-- Barra de Controle do Advisor (Oculta automaticamente na impressão PDF) -->
+      <div class="presentation-toolbar">
+        <div class="presentation-toolbar-left">
+          <span style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #CBD5E1;">
+            Modo Apresentação ao Cliente (Visão Consultiva Limpa):
+          </span>
+          <select id="presentation-client-select" class="presentation-select" aria-label="Selecionar Cliente para Apresentação">
+            <!-- Populado via js/app.js -->
+          </select>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button id="btn-print-presentation" class="btn btn-santander-primary">
+            🖨️ Imprimir / Exportar Relatório em PDF
+          </button>
+          <button id="btn-close-presentation" class="btn btn-dark-outline">
+            ✕ Voltar ao Cockpit do Advisor
+          </button>
+        </div>
+      </div>
+
+      <!-- Documento Executivo de Private Banking -->
+      <div class="presentation-document">
+        <!-- Cabeçalho Institucional -->
+        <div class="pres-doc-header">
+          <div>
+            <div class="pres-brand-line">
+              <span class="pres-brand-mark">SANTANDER PRIVATE BANKING</span>
+              <span id="pres-date" style="font-size: 12px; color: var(--text-muted);">Estudo Patrimonial Executivo</span>
+            </div>
+            <h1 id="pres-client-name">—</h1>
+            <p id="pres-client-code" style="font-size: 13px; color: var(--text-secondary);">—</p>
+          </div>
+
+          <div class="pres-doc-right">
+            <div>Advisory &amp; Portfolio Solutions</div>
+            <div><strong>Banker Responsável:</strong> <span id="pres-banker-name">—</span></div>
+            <div id="pres-profile-badge" class="pres-mandate-pill">Mandato —</div>
+          </div>
+        </div>
+
+        <!-- KPIs de Performance e Objetivo Estratégico -->
+        <div class="pres-kpi-strip">
+          <div class="pres-kpi-box">
+            <div class="pres-kpi-label">Patrimônio Consolidado Sob Gestão</div>
+            <div id="pres-kpi-aum" class="pres-kpi-val">R$ 0</div>
+            <div class="pres-kpi-sub">Custódia e fundos exclusivos Santander Private</div>
+          </div>
+
+          <div class="pres-kpi-box">
+            <div class="pres-kpi-label">Desempenho Acumulado (Últimos 12 Meses)</div>
+            <div id="pres-kpi-return" class="pres-kpi-val">0,00%</div>
+            <div id="pres-kpi-cdi-ratio" class="pres-kpi-sub">— do CDI (Benchmark: 11,25% a.a.)</div>
+          </div>
+
+          <div class="pres-kpi-box highlight">
+            <div class="pres-kpi-label">Meta da Proposta Estratégica</div>
+            <div id="pres-kpi-target-cdi" class="pres-kpi-val">110% do CDI</div>
+            <div id="pres-kpi-target-vol" class="pres-kpi-sub">Volatilidade Alvo Estimada</div>
+          </div>
+        </div>
+
+        <!-- Síntese Consultiva (Linguagem Elegante para o Cliente Final) -->
+        <div class="pres-consultative-banner">
+          <h3 id="pres-executive-headline">Proposta de Alinhamento Estratégico de Portfólio</h3>
+          <p id="pres-executive-summary">—</p>
+        </div>
+
+        <!-- Gráficos de Distribuição Patrimonial e Performance vs CDI -->
+        <div class="pres-charts-row">
+          <div class="pres-chart-card">
+            <h4>Distribuição Patrimonial Atual (%)</h4>
+            <div class="pres-canvas-box">
+              <canvas id="pres-chart-current"></canvas>
+            </div>
+          </div>
+
+          <div class="pres-chart-card">
+            <h4>Alocação Estratégica Proposta (%)</h4>
+            <div class="pres-canvas-box">
+              <canvas id="pres-chart-target"></canvas>
+            </div>
+          </div>
+
+          <div class="pres-chart-card">
+            <h4>Evolução 12 Meses (% Carteira vs. % CDI)</h4>
+            <div class="pres-canvas-box">
+              <canvas id="pres-chart-performance"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Proposta de Realocação Estratégica Explicada de Forma Clara -->
+        <div class="pres-table-section">
+          <h3>Plano de Realocação Estratégica Recomendado</h3>
+          <table class="pres-reallocation-table">
+            <thead>
+              <tr>
+                <th>Classe de Ativo</th>
+                <th class="text-right">Posição Atual</th>
+                <th class="text-right">Alocação Proposta</th>
+                <th>Diretriz Tática</th>
+                <th class="text-right">Movimentação (R$)</th>
+                <th>Objetivo Estratégico para o Patrimônio</th>
+              </tr>
+            </thead>
+            <tbody id="pres-reallocation-tbody">
+              <!-- Populado via js/app.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cenário Macroeconômico & Diretriz do Mandato -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+          <div class="pres-consultative-banner" style="padding: 16px 20px;">
+            <h3 style="font-size: 14px;">Visão Macroeconômica Santander Private</h3>
+            <p id="pres-macro-scenario" style="font-size: 12.5px;">—</p>
+          </div>
+          <div class="pres-consultative-banner" style="padding: 16px 20px;">
+            <h3 style="font-size: 14px;">Diretriz Estrutural do Seu Perfil</h3>
+            <p id="pres-model-description" style="font-size: 12.5px;">—</p>
+          </div>
+        </div>
+
+        <!-- Rodapé Institucional -->
+        <div class="pres-footer-sign">
+          <div>
+            <strong>Santander Private Banking Brasil</strong> • Material de caráter exclusivamente consultivo e personalizado.<br />
+            Rentabilidade passada não representa garantia de rentabilidade futura. Indicadores de referência: CDI 11,25% a.a. | USD/BRL R$ 5,74.
+          </div>
+          <div style="text-align: right;">
+            <div style="border-top: 1px solid #94A3B8; padding-top: 4px; width: 220px;">
+              De acordo — Advisory Desk &amp; Cliente
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Container de Notificações Toast -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts Modulares da Aplicação -->
+  <script src="js/data.js"></script>
+  <script src="js/analytics.js"></script>
+  <script src="js/copilot.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

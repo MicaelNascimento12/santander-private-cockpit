@@ -1,0 +1,34 @@
+[
+  {
+    "id": "PB-3011",
+    "name": "Instituto & Família Salles Braga",
+    "age": 65,
+    "aum": 58000000,
+    "profile": "Conservador",
+    "allocation": {
+      "rendaFixa": 50,
+      "multimercado": 15,
+      "rendaVariavel": 20,
+      "internacional": 5,
+      "alternativos": 10
+    },
+    "return12m": 8.10,
+    "cdi12m": 11.25
+  },
+  {
+    "id": "PB-3025",
+    "name": "Fernanda & Lucas Mello Franco",
+    "age": 44,
+    "aum": 27500000,
+    "profile": "Arrojado",
+    "allocation": {
+      "rendaFixa": 32,
+      "multimercado": 23,
+      "rendaVariavel": 20,
+      "internacional": 15,
+      "alternativos": 10
+    },
+    "return12m": 14.85,
+    "cdi12m": 11.25
+  }
+]

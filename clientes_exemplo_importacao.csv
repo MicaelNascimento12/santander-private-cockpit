@@ -1,0 +1,6 @@
+id;nome;idade;patrimonio;perfil;renda_fixa;multimercado;renda_variavel;internacional;alternativos;rentabilidade_12m;cdi_12m
+PB-2010;Família Andrade Camargo;62;38500000;Conservador;52;14;18;6;10;8.40;11.25
+PB-2015;Dr. Ricardo Albuquerque;47;21000000;Moderado;30;18;25;7;20;7.85;11.25
+PB-2022;Sofia Mendes Valladares;54;49000000;Moderado;55;20;10;10;5;12.90;11.25
+PB-2030;Leonardo & Clara Prado;39;16800000;Arrojado;15;16;34;12;23;9.45;11.25
+PB-2044;Comendador Artur Figueiredo;71;74000000;Conservador;82;10;0;8;0;12.30;11.25
